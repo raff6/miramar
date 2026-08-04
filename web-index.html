@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Deptos en Miramar — buscador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --marine: #163B36;
+    --marine-dark: #0E2825;
+    --paper: #F5EFE1;
+    --paper-dim: #EAE1CC;
+    --clay: #C1502E;
+    --clay-dark: #9C3E22;
+    --foam: #8FB8AE;
+    --ink: #1C1B17;
+    --ink-soft: #4A4740;
+    --radius: 3px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .display {
+    font-family: 'Archivo Expanded', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ---------- HERO / TOLDO ---------- */
+  header.hero {
+    background: var(--marine);
+    color: var(--paper);
+    padding: 3.5rem 1.5rem 4rem;
+    position: relative;
+  }
+
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--foam);
+    margin: 0 0 0.75rem;
+  }
+
+  .eyebrow::before { content: "◐ "; }
+
+  h1.display {
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    line-height: 0.95;
+    margin: 0 0 1rem;
+    color: var(--paper);
+  }
+
+  h1.display span { color: var(--clay); }
+
+  .hero p.sub {
+    max-width: 40ch;
+    color: var(--foam);
+    font-size: 1.05rem;
+    margin: 0;
+  }
+
+  /* borde ola tipo costanera */
+  .wave-divider {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 28px;
+    background: var(--paper);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 20' preserveAspectRatio='none'%3E%3Cpath d='M0 10 Q 25 0 50 10 T 100 10 T 150 10 T 200 10 T 250 10 T 300 10 T 350 10 T 400 10 T 450 10 T 500 10 T 550 10 T 600 10 V20H0Z'/%3E%3C/svg%3E") repeat-x;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 20' preserveAspectRatio='none'%3E%3Cpath d='M0 10 Q 25 0 50 10 T 100 10 T 150 10 T 200 10 T 250 10 T 300 10 T 350 10 T 400 10 T 450 10 T 500 10 T 550 10 T 600 10 V20H0Z'/%3E%3C/svg%3E") repeat-x;
+    mask-size: 60px 28px;
+  }
+
+  /* ---------- FILTROS ---------- */
+  .filters {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--paper);
+    border-bottom: 2px solid var(--ink);
+    padding: 1rem 1.5rem;
+  }
+
+  .filters-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    align-items: flex-end;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .field label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .field select, .field input {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.6rem;
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    background: #fff;
+    color: var(--ink);
+    min-width: 9.5rem;
+  }
+
+  .field.narrow select, .field.narrow input { min-width: 6rem; }
+
+  .field select:focus, .field input:focus {
+    outline: 3px solid var(--clay);
+    outline-offset: 1px;
+  }
+
+  .result-count {
+    margin-left: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    align-self: center;
+  }
+
+  /* ---------- GRID ---------- */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.1rem;
+  }
+
+  /* tarjeta = placa de edificio */
+  .card {
+    background: #fff;
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: var(--ink);
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .card:hover, .card:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: 4px 4px 0 var(--marine);
+    outline: none;
+  }
+
+  .card-plate {
+    background: var(--marine);
+    color: var(--paper);
+    padding: 0.6rem 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-plate .source {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--foam);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-plate .zone {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    background: var(--clay);
+    color: #fff;
+    padding: 0.15rem 0.4rem;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .card-body {
+    padding: 1rem 0.9rem 1.1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .card-title {
+    font-size: 0.95rem;
+    line-height: 1.35;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .card-price {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: var(--clay-dark);
+  }
+
+  .card-specs {
+    display: flex;
+    gap: 0.9rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    border-top: 1px dashed var(--paper-dim);
+    padding-top: 0.6rem;
+  }
+
+  .card-specs b { color: var(--ink); }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: var(--ink-soft);
+  }
+
+  .empty-state .display {
+    font-size: 1.6rem;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem 1rem 3rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">11+ inmobiliarias · actualizado automáticamente</p>
+    <h1 class="display">Deptos en<br><span>Miramar</span></h1>
+    <p class="sub">Todo lo que está en venta en la ciudad, juntado de las inmobiliarias locales en un solo lugar.</p>
+  </div>
+  <div class="wave-divider"></div>
+</header>
+
+<div class="filters">
+  <div class="filters-inner">
+    <div class="field">
+      <label for="f-inmobiliaria">Inmobiliaria</label>
+      <select id="f-inmobiliaria"><option value="">Todas</option></select>
+    </div>
+    <div class="field">
+      <label for="f-zona">Zona</label>
+      <select id="f-zona"><option value="">Todas</option></select>
+    </div>
+    <div class="field narrow">
+      <label for="f-ambientes">Ambientes</label>
+      <select id="f-ambientes">
+        <option value="">Todos</option>
+        <option value="1">1+</option>
+        <option value="2">2+</option>
+        <option value="3">3+</option>
+        <option value="4">4+</option>
+      </select>
+    </div>
+    <div class="field narrow">
+      <label for="f-min">Precio mín (USD)</label>
+      <input id="f-min" type="number" placeholder="0" min="0" step="1000">
+    </div>
+    <div class="field narrow">
+      <label for="f-max">Precio máx (USD)</label>
+      <input id="f-max" type="number" placeholder="Sin tope" min="0" step="1000">
+    </div>
+    <div class="field">
+      <label for="f-orden">Ordenar por</label>
+      <select id="f-orden">
+        <option value="price-asc">Precio: menor a mayor</option>
+        <option value="price-desc">Precio: mayor a menor</option>
+      </select>
+    </div>
+    <div class="result-count" id="result-count"></div>
+  </div>
+</div>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="empty-state" id="empty" hidden>
+    <p class="display">Nada por acá</p>
+    <p>No hay departamentos que matcheen esos filtros. Probá aflojando el precio o la zona.</p>
+  </div>
+</main>
+
+<footer>
+  Datos scrapeados de inmobiliarias públicas de Miramar · uso informativo, verificá siempre con la inmobiliaria
+</footer>
+
+<script>
+  // ---------- Carga de datos ----------
+  // En producción esto lee data/departamentos.json (generado por los scrapers).
+  // Si falla el fetch (ej. abriendo el archivo directo sin server), usamos
+  // datos de ejemplo para que la web se pueda ver igual.
+  const DEMO_DATA = [
+    { id: "demo-1", source: "Isaia Inmobiliaria", price: 55000, currency: "USD", rooms: 2, zone: "Zona I", title: "Living-comedor lateral al mar, cocina americana, dormitorio con vista al mar, baño completo", totalArea: null },
+    { id: "demo-2", source: "Zamorano Propiedades", price: 55000, currency: "USD", rooms: 1, zone: "Zona I", title: "Edificio Legarra III, piso 12º contra frente, comedor, cocina y dormitorio", totalArea: null },
+    { id: "demo-3", source: "Murga Inmobiliaria", price: 80000, currency: "USD", rooms: 2, zone: "Zona I", title: "Edificio Playa II, living-comedor con ventana al frente, cocina semi-integrada", totalArea: null },
+    { id: "demo-4", source: "Mercier Propiedades", price: 90000, currency: "USD", rooms: 2, zone: "Zona II", title: "Living comedor, cocina, 2 dormitorios, baño y toilette, balcón a la calle, cochera individual", totalArea: null },
+    { id: "demo-5", source: "Boggio Estudio Inmobiliario", price: 85000, currency: "USD", rooms: 3, zone: "Zona I", title: "Edificio Iguazú, piso 11 al frente, en pleno centro", totalArea: null },
+    { id: "demo-6", source: "Caraballo Propiedades", price: 65000, currency: "USD", rooms: 2, zone: "Zona III", title: "Departamento en venta, zona iii, amplios y luminosos ambientes", totalArea: 45 },
+    { id: "demo-7", source: "Alvarez Barrios Inmobiliaria", price: 235000, currency: "USD", rooms: 4, zone: "Zona II", title: "Propiedad compuesta por 3 unidades de excelente construcción", totalArea: 375 },
+    { id: "demo-8", source: "Sastre Propiedades", price: 48000, currency: "USD", rooms: 1, zone: "Zona I", title: "Increíble monoambiente en el edificio Sur XIV, ubicado en la costanera", totalArea: null },
+  ];
+
+  let allData = [];
+
+  async function loadData() {
+    try {
+      const res = await fetch("../data/departamentos.json");
+      if (!res.ok) throw new Error("no data file yet");
+      const json = await res.json();
+      allData = json.length ? json : DEMO_DATA;
+    } catch (e) {
+      console.warn("Usando datos de ejemplo (todavía no corriste los scrapers):", e.message);
+      allData = DEMO_DATA;
+    }
+    populateFilterOptions();
+    render();
+  }
+
+  function populateFilterOptions() {
+    const sources = [...new Set(allData.map(d => d.source).filter(Boolean))].sort();
+    const zones = [...new Set(allData.map(d => d.zone).filter(Boolean))].sort();
+
+    const selInmo = document.getElementById("f-inmobiliaria");
+    sources.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s; opt.textContent = s;
+      selInmo.appendChild(opt);
+    });
+
+    const selZona = document.getElementById("f-zona");
+    zones.forEach(z => {
+      const opt = document.createElement("option");
+      opt.value = z; opt.textContent = z;
+      selZona.appendChild(opt);
+    });
+  }
+
+  function currentFilters() {
+    return {
+      inmobiliaria: document.getElementById("f-inmobiliaria").value,
+      zona: document.getElementById("f-zona").value,
+      ambientes: parseInt(document.getElementById("f-ambientes").value) || 0,
+      min: parseFloat(document.getElementById("f-min").value) || 0,
+      max: parseFloat(document.getElementById("f-max").value) || Infinity,
+      orden: document.getElementById("f-orden").value,
+    };
+  }
+
+  function render() {
+    const f = currentFilters();
+
+    let filtered = allData.filter(d => {
+      if (f.inmobiliaria && d.source !== f.inmobiliaria) return false;
+      if (f.zona && d.zone !== f.zona) return false;
+      if (f.ambientes && (!d.rooms || d.rooms < f.ambientes)) return false;
+      if (d.price != null) {
+        if (d.price < f.min || d.price > f.max) return false;
+      }
+      return true;
+    });
+
+    filtered.sort((a, b) => {
+      const pa = a.price ?? Infinity, pb = b.price ?? Infinity;
+      return f.orden === "price-asc" ? pa - pb : pb - pa;
+    });
+
+    const grid = document.getElementById("grid");
+    const empty = document.getElementById("empty");
+    grid.innerHTML = "";
+
+    document.getElementById("result-count").textContent =
+      `${filtered.length} departamento${filtered.length === 1 ? "" : "s"}`;
+
+    if (filtered.length === 0) {
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
+
+    for (const d of filtered) {
+      const a = document.createElement("a");
+      a.className = "card";
+      a.href = d.sourceUrl || "#";
+      a.target = "_blank";
+      a.rel = "noopener";
+
+      const priceStr = d.price != null
+        ? `${d.currency === "ARS" ? "$" : "u$s"} ${d.price.toLocaleString("es-AR")}`
+        : "Consultar precio";
+
+      a.innerHTML = `
+        <div class="card-plate">
+          <span class="source">${escapeHtml(d.source || "—")}</span>
+          ${d.zone ? `<span class="zone">${escapeHtml(d.zone)}</span>` : ""}
+        </div>
+        <div class="card-body">
+          <p class="card-title">${escapeHtml(d.title || "Departamento en venta")}</p>
+          <div class="card-price">${priceStr}</div>
+          <div class="card-specs">
+            ${d.rooms ? `<span><b>${d.rooms}</b> amb.</span>` : ""}
+            ${d.bedrooms ? `<span><b>${d.bedrooms}</b> dorm.</span>` : ""}
+            ${d.totalArea ? `<span><b>${d.totalArea}</b> m²</span>` : ""}
+          </div>
+        </div>
+      `;
+      grid.appendChild(a);
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  document.querySelectorAll(".filters select, .filters input").forEach(el => {
+    el.addEventListener("input", render);
+  });
+
+  loadData();
+</script>
+
+</body>
+</html>
