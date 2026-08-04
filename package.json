@@ -1,0 +1,20 @@
+{
+  "name": "miramar-deptos",
+  "version": "0.1.0",
+  "description": "Scrapers de departamentos en venta en Miramar (BA) de varias inmobiliarias",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "scrape": "ts-node src/index.ts",
+    "scrape:build": "npm run build && node dist/index.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "playwright": "^1.47.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.0"
+  }
+}
