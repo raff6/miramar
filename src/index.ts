@@ -2,16 +2,18 @@ import fs from "fs";
 import path from "path";
 import { Scraper, Property } from "./shared/types";
 import { inmueblesEnMiramarScraper } from "./scrapers/inmueblesenmiramar";
-// Estos 4 todavía son borradores (selectores sin terminar) — quedan comentados
-// para que el scraper automático no falle. Se pueden sumar cuando estén listos:
+import { ofarrellScraper } from "./scrapers/ofarrell";
+import { gabarainScraper } from "./scrapers/gabarain";
+// Remax y Analía Verga son sitios que cargan todo con JavaScript (SPA),
+// necesitan un navegador headless (Playwright) o su API interna. Quedan
+// pendientes — ver README para el detalle de por qué.
 // import { remaxScraper } from "./scrapers/remax";
-// import { ofarrellScraper } from "./scrapers/ofarrell";
-// import { gabarainScraper } from "./scrapers/gabarain";
 // import { analiaVergaScraper } from "./scrapers/analiaverga";
 
-// El del portal ya cubre 11 de las 15 inmobiliarias por sí solo.
 const scrapers: Scraper[] = [
-  inmueblesEnMiramarScraper,
+  inmueblesEnMiramarScraper, // 11 inmobiliarias
+  ofarrellScraper,
+  gabarainScraper,
 ];
 
 async function main() {
