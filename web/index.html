@@ -185,6 +185,36 @@
     outline: none;
   }
 
+  .card-photo {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: var(--paper-dim);
+    display: block;
+    border-bottom: 1.5px solid var(--ink);
+  }
+
+  .card-photo-placeholder {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: repeating-linear-gradient(
+      45deg,
+      var(--paper-dim),
+      var(--paper-dim) 10px,
+      var(--paper) 10px,
+      var(--paper) 20px
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1.5px solid var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    text-align: center;
+    padding: 0.5rem;
+  }
+
   .card-plate {
     background: var(--marine);
     color: var(--paper);
@@ -441,7 +471,12 @@
         ? `${d.currency === "ARS" ? "$" : "u$s"} ${d.price.toLocaleString("es-AR")}`
         : "Consultar precio";
 
+      const photoHtml = (d.images && d.images.length > 0)
+        ? `<img class="card-photo" src="${d.images[0]}" alt="${escapeHtml(d.title || 'Departamento')}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'card-photo-placeholder',textContent:'Sin foto disponible'}))">`
+        : `<div class="card-photo-placeholder">Sin foto disponible</div>`;
+
       a.innerHTML = `
+        ${photoHtml}
         <div class="card-plate">
           <span class="source">${escapeHtml(d.source || "—")}</span>
           ${d.zone ? `<span class="zone">${escapeHtml(d.zone)}</span>` : ""}
