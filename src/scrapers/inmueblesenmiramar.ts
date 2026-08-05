@@ -15,10 +15,12 @@
  * IMPORTANTE: el sitio también incluye propiedades de Mar del Plata y otras
  * ciudades de la red (mismo template). Filtramos por ciudad al final.
  *
- * NOTA: este sitio (ASP viejo) tira error 500 de forma intermitente, y además
- * tiene un bug propio: si la primera página lleva "start=0" explícito, se
- * rompe. Por eso `fetchHtml` reintenta, y `LIST_URL` arma la página 1 sin
- * el parámetro start.
+ * NOTA: este sitio (ASP viejo) tira error 500 de forma intermitente en
+ * algunas páginas al azar, y además tiene un bug propio: si la primera
+ * página lleva "start=0" explícito, se rompe siempre. Por eso `fetchHtml`
+ * reintenta, `LIST_URL` arma la página 1 sin el parámetro start, y si una
+ * página de listado falla igual después de reintentar, se saltea en vez
+ * de tirar abajo todo el scraper.
  */
 
 import * as cheerio from "cheerio";
@@ -149,8 +151,12 @@ export const inmueblesEnMiramarScraper: Scraper = {
 
     for (let page = 1; page < totalPages; page++) {
       await sleep(DELAY_MS);
-      const html = await fetchHtml(LIST_URL(page * PAGE_SIZE));
-      extractDetailLinks(html).forEach((l) => allDetailLinks.add(l));
+      try {
+        const html = await fetchHtml(LIST_URL(page * PAGE_SIZE));
+        extractDetailLinks(html).forEach((l) => allDetailLinks.add(l));
+      } catch (err) {
+        console.warn(`[inmueblesenmiramar] no se pudo leer la página ${page}, la salteamos:`, (err as Error).message);
+      }
     }
 
     console.log(`[inmueblesenmiramar] ${allDetailLinks.size} publicaciones únicas a visitar`);
