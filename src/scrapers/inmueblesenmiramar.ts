@@ -15,8 +15,10 @@
  * IMPORTANTE: el sitio también incluye propiedades de Mar del Plata y otras
  * ciudades de la red (mismo template). Filtramos por ciudad al final.
  *
- * NOTA: este sitio (ASP viejo) tira error 500 de forma intermitente incluso
- * con URLs válidas, por eso `fetchHtml` reintenta varias veces antes de fallar.
+ * NOTA: este sitio (ASP viejo) tira error 500 de forma intermitente, y además
+ * tiene un bug propio: si la primera página lleva "start=0" explícito, se
+ * rompe. Por eso `fetchHtml` reintenta, y `LIST_URL` arma la página 1 sin
+ * el parámetro start.
  */
 
 import * as cheerio from "cheerio";
@@ -24,8 +26,12 @@ import { Property, Scraper } from "../shared/types";
 import { idFromUrl, parsePrice, firstNumber, sleep } from "../shared/utils";
 
 const BASE = "https://inmueblesenmiramar.com";
+// OJO: este sitio tira error 500 si la primera página lleva "start=0" explícito.
+// Por eso la página 1 no incluye el parámetro start, y desde la página 2 sí.
 const LIST_URL = (start: number) =>
-  `${BASE}/venta-de-propiedades.asp?start=${start}&x_Tipo=7&z_Tipo=%3D%2C%2C&orden=0&t=0`;
+  start === 0
+    ? `${BASE}/venta-de-propiedades.asp?x_Tipo=7&z_Tipo=%3D%2C%2C`
+    : `${BASE}/venta-de-propiedades.asp?start=${start}&x_Tipo=7&z_Tipo=%3D%2C%2C&orden=0&t=0`;
 
 const PAGE_SIZE = 10;
 const DELAY_MS = 800; // no golpear el sitio con requests seguidos
@@ -77,6 +83,7 @@ function parseDetail(html: string, url: string): Property | null {
   const $ = cheerio.load(html);
   const text = $("body").text().replace(/\s+/g, " ").trim();
 
+  // Título / agencia: suele venir como "... ofrecido por X Propiedades"
   const agencyMatch = text.match(/ofrecido por ([^.|]+?)(?:\s*\||\.|$)/i);
   const source = agencyMatch ? agencyMatch[1].trim() : "Desconocida (portal)";
 
