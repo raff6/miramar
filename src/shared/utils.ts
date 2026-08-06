@@ -38,3 +38,23 @@ export function firstNumber(raw: string | null | undefined): number | null {
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+// Acorta nombres largos de inmobiliarias para que se vean mejor en la web.
+// Ej: "Oscar Murga Inmobiliaria" -> "Murga", "Sastre Propiedades" -> "Sastre"
+export function shortenAgencyName(name: string): string {
+  if (!name) return name;
+
+  let short = name
+    .replace(/\bpropiedades\b/gi, "")
+    .replace(/\binmobiliaria\b/gi, "")
+    .replace(/\bestudio inmobiliario\b/gi, "")
+    .replace(/\bnegocios inmobiliarios\b/gi, "")
+    .replace(/\badministraci[oó]n\b/gi, "")
+    .replace(/\bcorredores?\b/gi, "")
+    .replace(/\boscar\b/gi, "") // "Oscar Murga" -> "Murga"
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  // Si quedó vacío por algún caso raro, usar el original
+  return short.length > 0 ? short : name;
+}
