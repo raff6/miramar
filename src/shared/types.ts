@@ -21,7 +21,8 @@ export interface Property {
   address: string | null;
   description: string | null;
   images: string[];
-  scrapedAt: string;          // ISO timestamp
+  scrapedAt: string;          // ISO timestamp de esta corrida
+  firstSeenAt: string;        // ISO timestamp de la primera vez que se vio este aviso
 }
 
 export interface Scraper {
