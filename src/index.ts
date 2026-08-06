@@ -1,14 +1,10 @@
 import fs from "fs";
 import path from "path";
 import { Scraper, Property } from "./shared/types";
+import { shortenAgencyName } from "./shared/utils";
 import { inmueblesEnMiramarScraper } from "./scrapers/inmueblesenmiramar";
 import { ofarrellScraper } from "./scrapers/ofarrell";
 import { gabarainScraper } from "./scrapers/gabarain";
-// Remax y Analía Verga son sitios que cargan todo con JavaScript (SPA),
-// necesitan un navegador headless (Playwright) o su API interna. Quedan
-// pendientes — ver README para el detalle de por qué.
-// import { remaxScraper } from "./scrapers/remax";
-// import { analiaVergaScraper } from "./scrapers/analiaverga";
 
 const scrapers: Scraper[] = [
   inmueblesEnMiramarScraper, // 11 inmobiliarias
@@ -35,13 +31,37 @@ async function main() {
 
   const outDir = path.join(__dirname, "..", "data");
   fs.mkdirSync(outDir, { recursive: true });
-
   const outFile = path.join(outDir, "departamentos.json");
-  fs.writeFileSync(outFile, JSON.stringify(results, null, 2), "utf-8");
+
+  // Leer la corrida anterior (si existe) para saber qué avisos ya conocíamos,
+  // y así poder marcar como "nuevos" a los que no estaban antes.
+  const previousFirstSeen = new Map<string, string>();
+  if (fs.existsSync(outFile)) {
+    try {
+      const previous: Property[] = JSON.parse(fs.readFileSync(outFile, "utf-8"));
+      for (const p of previous) {
+        previousFirstSeen.set(p.id, p.firstSeenAt || p.scrapedAt);
+      }
+    } catch {
+      console.warn("No se pudo leer la corrida anterior, se trata todo como nuevo.");
+    }
+  }
+
+  const now = new Date().toISOString();
+  const finalResults: Property[] = results.map((p) => ({
+    ...p,
+    source: shortenAgencyName(p.source),
+    firstSeenAt: previousFirstSeen.get(p.id) || now,
+  }));
+
+  const newCount = finalResults.filter((p) => p.firstSeenAt === now).length;
+
+  fs.writeFileSync(outFile, JSON.stringify(finalResults, null, 2), "utf-8");
 
   console.log("\n=== Resumen ===");
   console.table(summary);
-  console.log(`\nTotal: ${results.length} propiedades guardadas en ${outFile}`);
+  console.log(`\nTotal: ${finalResults.length} propiedades guardadas en ${outFile}`);
+  console.log(`Nuevas desde la última corrida: ${newCount}`);
 }
 
 main().catch((err) => {
