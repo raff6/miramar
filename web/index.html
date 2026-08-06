@@ -168,6 +168,7 @@
 
   /* tarjeta = placa de edificio */
   .card {
+    position: relative;
     background: #fff;
     border: 1.5px solid var(--ink);
     border-radius: var(--radius);
@@ -185,13 +186,29 @@
     outline: none;
   }
 
-  .card-photo {
-    width: 100%;
+  .card-photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
     aspect-ratio: 4 / 3;
-    object-fit: cover;
-    background: var(--paper-dim);
-    display: block;
+    background: var(--ink);
     border-bottom: 1.5px solid var(--ink);
+    overflow: hidden;
+  }
+
+  .card-photos img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: var(--paper-dim);
+  }
+
+  /* si hay 1 sola foto, que ocupe todo el espacio */
+  .card-photos.single {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
   }
 
   .card-photo-placeholder {
@@ -244,6 +261,22 @@
     padding: 0.15rem 0.4rem;
     border-radius: 2px;
     white-space: nowrap;
+  }
+
+  .badge-new {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+    background: var(--clay);
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.5rem;
+    border-radius: 2px;
+    z-index: 2;
+    box-shadow: 2px 2px 0 var(--ink);
   }
 
   .card-body {
@@ -349,7 +382,15 @@
       <select id="f-orden">
         <option value="price-asc">Precio: menor a mayor</option>
         <option value="price-desc">Precio: mayor a menor</option>
+        <option value="newest">Más nuevos primero</option>
       </select>
+    </div>
+    <div class="field narrow">
+      <label for="f-nuevos">&nbsp;</label>
+      <label style="display:flex; align-items:center; gap:0.4rem; font-family:'IBM Plex Mono',monospace; font-size:0.8rem; white-space:nowrap; border:1.5px solid var(--ink); border-radius:3px; padding:0.5rem 0.6rem; cursor:pointer; background:#fff;">
+        <input type="checkbox" id="f-nuevos" style="width:1rem;height:1rem;">
+        Solo nuevos (7 días)
+      </label>
     </div>
     <div class="result-count" id="result-count"></div>
   </div>
@@ -373,14 +414,14 @@
   // Si falla el fetch (ej. abriendo el archivo directo sin server), usamos
   // datos de ejemplo para que la web se pueda ver igual.
   const DEMO_DATA = [
-    { id: "demo-1", source: "Isaia Inmobiliaria", price: 55000, currency: "USD", rooms: 2, zone: "Zona I", title: "Living-comedor lateral al mar, cocina americana, dormitorio con vista al mar, baño completo", totalArea: null },
-    { id: "demo-2", source: "Zamorano Propiedades", price: 55000, currency: "USD", rooms: 1, zone: "Zona I", title: "Edificio Legarra III, piso 12º contra frente, comedor, cocina y dormitorio", totalArea: null },
-    { id: "demo-3", source: "Murga Inmobiliaria", price: 80000, currency: "USD", rooms: 2, zone: "Zona I", title: "Edificio Playa II, living-comedor con ventana al frente, cocina semi-integrada", totalArea: null },
-    { id: "demo-4", source: "Mercier Propiedades", price: 90000, currency: "USD", rooms: 2, zone: "Zona II", title: "Living comedor, cocina, 2 dormitorios, baño y toilette, balcón a la calle, cochera individual", totalArea: null },
-    { id: "demo-5", source: "Boggio Estudio Inmobiliario", price: 85000, currency: "USD", rooms: 3, zone: "Zona I", title: "Edificio Iguazú, piso 11 al frente, en pleno centro", totalArea: null },
-    { id: "demo-6", source: "Caraballo Propiedades", price: 65000, currency: "USD", rooms: 2, zone: "Zona III", title: "Departamento en venta, zona iii, amplios y luminosos ambientes", totalArea: 45 },
-    { id: "demo-7", source: "Alvarez Barrios Inmobiliaria", price: 235000, currency: "USD", rooms: 4, zone: "Zona II", title: "Propiedad compuesta por 3 unidades de excelente construcción", totalArea: 375 },
-    { id: "demo-8", source: "Sastre Propiedades", price: 48000, currency: "USD", rooms: 1, zone: "Zona I", title: "Increíble monoambiente en el edificio Sur XIV, ubicado en la costanera", totalArea: null },
+    { id: "demo-1", source: "Isaia", price: 55000, currency: "USD", rooms: 2, zone: "Zona I", title: "Living-comedor lateral al mar, cocina americana, dormitorio con vista al mar, baño completo", totalArea: null, firstSeenAt: new Date(Date.now() - 2 * 86400000).toISOString() },
+    { id: "demo-2", source: "Zamorano", price: 55000, currency: "USD", rooms: 1, zone: "Zona I", title: "Edificio Legarra III, piso 12º contra frente, comedor, cocina y dormitorio", totalArea: null, firstSeenAt: new Date(Date.now() - 40 * 86400000).toISOString() },
+    { id: "demo-3", source: "Murga", price: 80000, currency: "USD", rooms: 2, zone: "Zona I", title: "Edificio Playa II, living-comedor con ventana al frente, cocina semi-integrada", totalArea: null, firstSeenAt: new Date(Date.now() - 40 * 86400000).toISOString() },
+    { id: "demo-4", source: "Mercier", price: 90000, currency: "USD", rooms: 2, zone: "Zona II", title: "Living comedor, cocina, 2 dormitorios, baño y toilette, balcón a la calle, cochera individual", totalArea: null, firstSeenAt: new Date(Date.now() - 1 * 86400000).toISOString() },
+    { id: "demo-5", source: "Boggio", price: 85000, currency: "USD", rooms: 3, zone: "Zona I", title: "Edificio Iguazú, piso 11 al frente, en pleno centro", totalArea: null, firstSeenAt: new Date(Date.now() - 40 * 86400000).toISOString() },
+    { id: "demo-6", source: "Caraballo", price: 65000, currency: "USD", rooms: 2, zone: "Zona III", title: "Departamento en venta, zona iii, amplios y luminosos ambientes", totalArea: 45, firstSeenAt: new Date(Date.now() - 40 * 86400000).toISOString() },
+    { id: "demo-7", source: "Alvarez Barrios", price: 235000, currency: "USD", rooms: 4, zone: "Zona II", title: "Propiedad compuesta por 3 unidades de excelente construcción", totalArea: 375, firstSeenAt: new Date(Date.now() - 40 * 86400000).toISOString() },
+    { id: "demo-8", source: "Sastre", price: 48000, currency: "USD", rooms: 1, zone: "Zona I", title: "Increíble monoambiente en el edificio Sur XIV, ubicado en la costanera", totalArea: null, firstSeenAt: new Date(Date.now() - 40 * 86400000).toISOString() },
   ];
 
   let allData = [];
@@ -426,7 +467,14 @@
       min: parseFloat(document.getElementById("f-min").value) || 0,
       max: parseFloat(document.getElementById("f-max").value) || Infinity,
       orden: document.getElementById("f-orden").value,
+      soloNuevos: document.getElementById("f-nuevos").checked,
     };
+  }
+
+  function isNew(d) {
+    if (!d.firstSeenAt) return false;
+    const days = (Date.now() - new Date(d.firstSeenAt).getTime()) / (1000 * 60 * 60 * 24);
+    return days <= 7;
   }
 
   function render() {
@@ -436,6 +484,7 @@
       if (f.inmobiliaria && d.source !== f.inmobiliaria) return false;
       if (f.zona && d.zone !== f.zona) return false;
       if (f.ambientes && (!d.rooms || d.rooms < f.ambientes)) return false;
+      if (f.soloNuevos && !isNew(d)) return false;
       if (d.price != null) {
         if (d.price < f.min || d.price > f.max) return false;
       }
@@ -443,6 +492,9 @@
     });
 
     filtered.sort((a, b) => {
+      if (f.orden === "newest") {
+        return new Date(b.firstSeenAt || 0).getTime() - new Date(a.firstSeenAt || 0).getTime();
+      }
       const pa = a.price ?? Infinity, pb = b.price ?? Infinity;
       return f.orden === "price-asc" ? pa - pb : pb - pa;
     });
@@ -472,10 +524,18 @@
         : "Consultar precio";
 
       const photoHtml = (d.images && d.images.length > 0)
-        ? `<img class="card-photo" src="${d.images[0]}" alt="${escapeHtml(d.title || 'Departamento')}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'card-photo-placeholder',textContent:'Sin foto disponible'}))">`
+        ? (() => {
+            const pics = d.images.slice(0, 4);
+            const singleClass = pics.length === 1 ? " single" : "";
+            const imgs = pics
+              .map(src => `<img src="${src}" alt="${escapeHtml(d.title || 'Departamento')}" loading="lazy" onerror="this.style.visibility='hidden'">`)
+              .join("");
+            return `<div class="card-photos${singleClass}">${imgs}</div>`;
+          })()
         : `<div class="card-photo-placeholder">Sin foto disponible</div>`;
 
       a.innerHTML = `
+        ${isNew(d) ? '<span class="badge-new">Nuevo</span>' : ""}
         ${photoHtml}
         <div class="card-plate">
           <span class="source">${escapeHtml(d.source || "—")}</span>
