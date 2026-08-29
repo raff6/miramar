@@ -1,7 +1,6 @@
 // Esquema común al que todos los scrapers deben normalizar sus resultados.
 // Cada scraper puede extraer datos distintos de cada sitio, pero siempre
 // tiene que devolver objetos con esta forma.
-
 export interface Property {
   // Identificador único y estable (para detectar duplicados / cambios de precio)
   id: string;                // ej: "murga-7347" o hash(url)
@@ -22,9 +21,8 @@ export interface Property {
   description: string | null;
   images: string[];
   scrapedAt: string;          // ISO timestamp de esta corrida
-  firstSeenAt: string;        // ISO timestamp de la primera vez que se vio este aviso
+  firstSeenAt?: string;       // ISO timestamp de la primera vez que se vio este aviso (lo completa index.ts)
 }
-
 export interface Scraper {
   name: string;               // nombre de la inmobiliaria (o "Portal - X" si agrupa varias)
   run(): Promise<Property[]>;
