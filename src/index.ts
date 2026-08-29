@@ -3,12 +3,10 @@ import path from "path";
 import { Scraper, Property } from "./shared/types";
 import { shortenAgencyName } from "./shared/utils";
 import { inmueblesEnMiramarScraper } from "./scrapers/inmueblesenmiramar";
-import { ofarrellScraper } from "./scrapers/ofarrell";
 import { gabarainScraper } from "./scrapers/gabarain";
 
 const scrapers: Scraper[] = [
   inmueblesEnMiramarScraper, // 11 inmobiliarias
-  ofarrellScraper,
   gabarainScraper,
 ];
 
